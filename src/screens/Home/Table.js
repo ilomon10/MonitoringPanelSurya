@@ -5,15 +5,20 @@ import { normalize } from '../../components/utility';
 
 export default Table = props => {
   const rows = props.currents.map((v) => {
-    return [...v.map(a => tableBodyCell(a))];
+    const d = new Date(v.timestamp);
+    return [
+      tableBodyCell(`${d.getHours()}:${d.getMinutes()}`),
+      tableBodyCell(v.current),
+      tableBodyCell(v.temperature),
+    ];
   })
   return (
     <View style={styles.body}>
       <RNTable style={styles.tableHead} borderStyle={{ borderColor: 'transparent' }}>
         <Row data={[
           tableHeadCell('Time', 'hh:mm'),
-          tableHeadCell('Power', 'watt'),
-          tableHeadCell('Temp', 'celcius')]} />
+          tableHeadCell('Current', 'Ampere'),
+          tableHeadCell('Temp', 'Celcius')]} />
       </RNTable>
       <View style={styles.hr}></View>
       <ScrollView>

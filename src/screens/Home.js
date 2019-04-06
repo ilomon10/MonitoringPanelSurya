@@ -1,47 +1,53 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LineChart } from "react-native-charts-wrapper";
+import { Path } from 'react-native-svg';
+import { AreaChart, Grid } from 'react-native-svg-charts';
+import * as shape from 'd3-shape';
+import firebase from 'react-native-firebase';
+
 import Sidebody from './Home/Sidebody';
 import Table from './Home/Table';
 
+firebase.auth()
+  .signInAnonymously()
+  .then(credential => {
+    if (credential) {
+      console.log('default app user ->', credential.user.toJSON());
+    }
+  });
+
 export default class Home extends React.Component {
   state = {
-    currents: [
-      [123, 23, 40],
-      [35, 23, 40],
-      [23, 23, 40],
-      [56, 23, 40],
-      [35, 23, 40],
-      [23, 23, 40],
-      [56, 23, 40],
-      [34, 23, 40],
-      [123, 23, 40],
-      [35, 23, 40],
-      [23, 23, 40],
-      [56, 23, 40],
-      [35, 23, 40],
-      [23, 23, 40],
-      [56, 23, 40],
-      [34, 23, 40],
-      [23, 23, 40],
-      [56, 23, 40],
-      [34, 23, 40],
-      [34, 23, 40],
-      [3, 23, 40],
-    ],
+    currents: [],
     totalPower: 1250,
   }
-
+  componentDidMount() {
+    this.readCurrentData();
+  }
   render() {
-    const lineCurrents = this.state.currents.map((v) => ({ y: v[0] }));
+    const lineCurrents = this.state.currents.map((v) => (parseInt(v.current)));
+    const Line = ({ line }) => (
+      <Path
+        key={'line'}
+        d={line}
+        strokeWidth={4}
+        stroke={'#4A5B6E'}
+        fill={'none'} />
+    )
     return (
       <View style={styles.wrapper}>
         <View style={styles.monitor}>
-          <LineChart style={{ flex: 1 }}
-            doubleTapToZoomEnabled={false}
-            drawGridBackground={false}
-            chartDescription={{ text: '' }}
-            data={{ dataSets: [{ label: 'arus', values: lineCurrents }] }} />
+          <AreaChart style={{ flex: 1 }}
+            curve={shape.curveNatural}
+            data={lineCurrents}
+            svg={{ fill: '#4A5B6E55' }}
+            contentInset={{ top: 8 }}
+          >
+            <Grid svg={{
+              strokeOpacity: 0.25,
+            }} />
+            <Line />
+          </AreaChart>
         </View>
         <View style={styles.main}>
           <Sidebody totalPower={this.state.totalPower} />
@@ -49,6 +55,25 @@ export default class Home extends React.Component {
         </View>
       </View>
     )
+  }
+
+  readCurrentData() {
+    const db = firebase.database();
+    const vm = this;
+    db.ref('/arus').on('child_added', function (snap) {
+      const snapList = snap.val();
+      let ret = snapList;
+      Object.keys(snapList).forEach(v => { ret[v] = parseInt(snapList[v]) });
+      vm.setState(p => {
+        return ({
+          currents: [
+            ...p.currents,
+            ret
+          ],
+          totalPower: p.currents.reduce((p, c) => p += c.current, 0) + ret.current
+        })
+      })
+    })
   }
 }
 
