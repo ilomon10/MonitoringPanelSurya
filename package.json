@@ -8,20 +8,23 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "moment": "^2.24.0",
     "react": "16.8.3",
     "react-native": "0.59.2",
     "react-native-charts-wrapper": "^0.5.1",
     "react-native-firebase": "^5.2.3",
+    "react-native-gesture-handler": "^1.1.0",
     "react-native-svg": "^9.3.7",
     "react-native-svg-charts": "^5.2.0",
-    "react-native-table-component": "^1.2.0"
+    "react-native-table-component": "^1.2.0",
+    "react-navigation": "^3.8.1"
   },
   "devDependencies": {
     "@babel/core": "7.4.0",
     "@babel/runtime": "7.4.2",
     "@react-native-community/eslint-config": "0.0.3",
     "babel-jest": "24.5.0",
-    "babel-preset-react-native": "^4.0.1",
+    "babel-preset-react-native": "^4.0.0",
     "eslint": "5.15.3",
     "jest": "24.5.0",
     "metro-react-native-babel-preset": "0.53.1",

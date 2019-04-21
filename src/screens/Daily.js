@@ -18,12 +18,10 @@ export default class Home extends React.Component {
     totalPower: 0,
   }
   componentDidMount() {
-    console.log(firebase.auth().currentUser);
     this.readCurrentData();
   }
   render() {
-    const lineCurrents = this.state.list.map((v) => v.current);
-    const lineVoltage = this.state.list.map((v) => v.voltage);
+    const linePower = this.state.list.map((v) => v.power);
     const Line = ({ line, color }) => (
       <Path
         key={'line'}
@@ -33,17 +31,12 @@ export default class Home extends React.Component {
         fill={'none'} />
     )
     const rows = this.state.list.map((v) => {
-      let { voltage, current, temperature } = v;
-
-      if (typeof voltage === 'number') voltage = v.voltage.toFixed(2);
-      if (typeof current === 'number') current = v.current.toFixed(2);
-      if (typeof temperature === 'number') temperature = v.temperature.toFixed(2);
+      let { power } = v;
+      if (typeof power === 'number') power = v.power.toFixed(5);
 
       return [
-        tableBodyCell(moment.unix(v.timestamp).format('HH:mm')),
-        tableBodyCell(voltage),
-        tableBodyCell(current),
-        tableBodyCell(temperature),
+        tableBodyCell(moment.unix(v.timestamp).format('DD-MM-YYYY')),
+        tableBodyCell(power),
       ];
     })
     return (
@@ -52,38 +45,23 @@ export default class Home extends React.Component {
           <View style={{ flex: 1 }}>
             <AreaChart style={{ flex: 1 }}
               curve={shape.curveNatural}
-              data={lineCurrents}
+              data={linePower}
               contentInset={{ top: 20, bottom: 30 }}
             >
               <Grid svg={{
                 strokeOpacity: 0.1,
               }} />
-              <Line color='#22A7F0' />
+              <Line color='#5B8930' />
             </AreaChart>
-            <AreaChart style={StyleSheet.absoluteFill}
-              curve={shape.curveNatural}
-              data={lineVoltage}
-              contentInset={{ top: 30, bottom: 30 }}>
-              <Line color='#F9690E' />
-            </AreaChart>
-          </View>
-          <View style={styles.powerTitle}>
-            <Text>
-              <Text style={{ fontSize: normalize(12) }}>Power </Text>
-              <Text style={{ fontSize: normalize(12), fontWeight: 'bold', color: '#5B8930' }}>{this.state.totalPower}</Text>
-              <Text style={{ fontSize: normalize(12) }}> Watt</Text>
-            </Text>
           </View>
         </View>
         <View style={styles.main}>
           <Table rows={rows} heads={[
-            tableHeadCell('Time', 'hh:mm'),
-            tableHeadCell('Voltage', ['Volt', '#F9690E']),
-            tableHeadCell('Current', ['Ampere', '#22A7F0']),
-            tableHeadCell('Temp', 'Celcius'),
+            tableHeadCell('Time', 'Day-Month-Year'),
+            tableHeadCell('Power', ['Watt', '#5B8930']),
           ]} />
           <View style={styles.tabTitleWrapper}>
-            <Text style={styles.tabTitle}>Today</Text>
+            <Text style={styles.tabTitle}>Daily</Text>
           </View>
         </View>
       </View>
@@ -93,24 +71,15 @@ export default class Home extends React.Component {
   readCurrentData() {
     const db = firebase.database();
     const vm = this;
-    const nowUTC = moment.utc();
-    const docs = nowUTC.startOf('date').unix();
-    db.ref(`/daily/${docs}/data`).orderByChild('timestamp', 'desc').on('child_added', function (snap) {
-      const snapList = snap.val();
+    db.ref(`/daily/`).on('child_added', function (snap) {
+      const snapVal = snap.val();
       vm.setState(p => {
         return ({
           list: [
             ...p.list,
-            snapList
+            { power: snapVal.power, timestamp: snap.key }
           ]
         })
-      })
-    })
-    db.ref(`/daily/${docs}/power`).on('value', (snap) => {
-      let totalPower = snap.val();
-      if(typeof totalPower === 'number') totalPower = totalPower.toFixed(2);
-      this.setState({
-        totalPower
       })
     })
   }
